@@ -37,7 +37,7 @@ else:
     specfile = vim.current.buffer.name
     if specfile:
         spec = rpm.spec(specfile)
-        headers = spec.packages[0].header
+        headers = spec.sourceHeader
         version = headers['Version']
         release = ".".join(headers['Release'].split(".")[:-1])
         vim.command("let ver = " + version)
