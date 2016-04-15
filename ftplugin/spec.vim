@@ -182,12 +182,8 @@ if !exists("*s:ParseRpmVars")
 		endif
 		let varname = strpart(a:str, start+2, end-(start+2))
 		execute a:strline
-		let definestr = "^[ \t]*%define[ \t]\\+" . varname . "[ \t]\\+\\(.*\\)$"
+		let definestr = "^[ \t]*%(?:global|define)[ \t]\\+" . varname . "[ \t]\\+\\(.*\\)$"
 		let linenum = search(definestr, "bW")
-		if (linenum == 0)
-			let definestr = substitute(definestr, "%define", "%global", "")
-			let linenum = search(definestr, "bW")
-		endif
 		if (linenum != -1)
 			let ret = ret .  substitute(getline(linenum), definestr, "\\1", "")
 		else
