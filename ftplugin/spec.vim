@@ -2,7 +2,7 @@
 " Filename: spec.vim
 " Maintainer: Igor Gnatenko i.gnatenko.brain@gmail.com
 " Former Maintainer: Gustavo Niemeyer <niemeyer@conectiva.com> (until March 2014)
-" Last Change: Mon Jun 01 21:15 MSK 2015 Igor Gnatenko
+" Last Change: Wed Apr 20 16:20 EDT 2016 Todd Zullinger
 
 if exists("b:did_ftplugin")
 	finish
@@ -39,7 +39,11 @@ else:
         spec = rpm.spec(specfile)
         headers = spec.sourceHeader
         version = headers['Version']
-        release = ".".join(headers['Release'].split(".")[:-1])
+        release = headers['Release']
+        distmacro = '%dist'
+        dist = rpm.expandMacro(distmacro)
+        if dist and dist != distmacro:
+            release = release.replace(rpm.expandMacro('%dist'), '')
         vim.command("let ver = " + version)
         vim.command("let rel = " + release)
 PYEND
