@@ -36,10 +36,11 @@ except ImportError:
 else:
     specfile = vim.current.buffer.name
     if specfile:
+        rpm.delMacro("dist")
         spec = rpm.spec(specfile)
         headers = spec.sourceHeader
-        version = headers['Version']
-        release = ".".join(headers['Release'].split(".")[:-1])
+        version = headers["Version"]
+        release = headers["Release"]
         vim.command("let ver = " + version)
         vim.command("let rel = " + release)
 PYEND
@@ -200,7 +201,7 @@ endif
 
 let b:match_ignorecase = 0
 let b:match_words =
-  \ '^Name:^%description:^%clean:^%setup:^%build:^%install:^%files:' .
+  \ '^Name:^%description:^%clean:^%(?:auto)?setup:^%build:^%install:^%files:' .
   \ '^%package:^%preun:^%postun:^%changelog'
 
 let &cpo = s:cpo_save
