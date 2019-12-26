@@ -39,10 +39,11 @@ else:
         rpm.delMacro("dist")
         spec = rpm.spec(specfile)
         headers = spec.sourceHeader
-        version = headers["Version"]
-        release = headers["Release"]
-        vim.command("let ver = " + version)
-        vim.command("let rel = " + release)
+        version = headers["Version"].encode('utf-8')
+        release = headers["Release"].encode('utf-8')
+        # The index in the format string is only needed for python < 3.1 support
+        vim.command("let b:ver = '{0}'".format(version.decode()))
+        vim.command("let b:rel = '{0}'".format(release.decode()))
 PYEND
 		endif
 	endfunction
@@ -65,8 +66,8 @@ if !exists("*s:SpecChangelog")
 		endif
 		let line = 0
 		let name = ""
-		let ver = ""
-		let rel = ""
+		let b:ver = ""
+		let b:rel = ""
 		let nameline = -1
 		let verline = -1
 		let relline = -1
@@ -76,12 +77,12 @@ if !exists("*s:SpecChangelog")
 			if (name == "" && linestr =~? '^Name:')
 				let nameline = line
 				let name = substitute(strpart(linestr,5), '^[	 ]*\([^ 	]\+\)[		]*$','\1','')
-			elseif (ver == "" && linestr =~? '^Version:')
+			elseif (b:ver == "" && linestr =~? '^Version:')
 				let verline = line
-				let ver = substitute(strpart(linestr,8), '^[	 ]*\([^ 	]\+\)[		]*$','\1','')
-			elseif (rel == "" && linestr =~? '^Release:')
+				let b:ver = substitute(strpart(linestr,8), '^[	 ]*\([^ 	]\+\)[		]*$','\1','')
+			elseif (b:rel == "" && linestr =~? '^Release:')
 				let relline = line
-				let rel = substitute(strpart(linestr,8), '^[	 ]*\([^ 	]\+\)[		]*$','\1','')
+				let b:rel = substitute(strpart(linestr,8), '^[	 ]*\([^ 	]\+\)[		]*$','\1','')
 			elseif (linestr =~? '^%changelog')
 				let chgline = line
 				execute line
@@ -92,8 +93,8 @@ if !exists("*s:SpecChangelog")
 		if (nameline != -1 && verline != -1 && relline != -1)
 			let include_release_info = exists("g:spec_chglog_release_info")
 			let name = s:ParseRpmVars(name, nameline)
-			let ver = s:ParseRpmVars(ver, verline)
-			let rel = s:ParseRpmVars(rel, relline)
+			let b:ver = s:ParseRpmVars(b:ver, verline)
+			let b:rel = s:ParseRpmVars(b:rel, relline)
 		else
 			let include_release_info = 0
 		endif
@@ -116,9 +117,9 @@ if !exists("*s:SpecChangelog")
 		if (chgline != -1)
 			let tmptime = v:lc_time
 			language time C
-			let parsed_format = "* ".strftime(format)." - ".ver."-".rel
+			let parsed_format = "* ".strftime(format)." - ".b:ver."-".b:rel
 			execute "language time" tmptime
-			let release_info = "+ ".name."-".ver."-".rel
+			let release_info = "+ ".name."-".b:ver."-".b:rel
 			let wrong_format = 0
 			let wrong_release = 0
 			let insert_line = 0
@@ -134,8 +135,8 @@ if !exists("*s:SpecChangelog")
 					if (option == 1)
 						execute relline
 						normal 
-						let rel = substitute(strpart(getline(relline),8), '^[	 ]*\([^ 	]\+\)[		]*$','\1','')
-						let release_info = "+ ".name."-".ver."-".rel
+						let b:rel = substitute(strpart(getline(relline),8), '^[	 ]*\([^ 	]\+\)[		]*$','\1','')
+						let release_info = "+ ".name."-".b:ver."-".b:rel
 					endif
 				endif
 				let n = 0
