@@ -24,8 +24,8 @@ endif
 
 if !exists("*s:GetRelVer")
 	function! s:GetRelVer()
-		if has('python')
-python << PYEND
+		if has('pythonx')
+pythonx << PYEND
 import sys, datetime, shutil, tempfile
 import vim
 
