@@ -41,9 +41,13 @@ else:
         headers = spec.sourceHeader
         version = headers["Version"].encode('utf-8')
         release = headers["Release"].encode('utf-8')
+        epoch = headers["Epoch"]
         # The index in the format string is only needed for python < 3.1 support
         vim.command("let b:ver = '{0}'".format(version.decode()))
         vim.command("let b:rel = '{0}'".format(release.decode()))
+        if epoch:
+            # Use "!s" to convert epoch to a string
+            vim.command("let b:epoch = '{0!s}'".format(epoch))
 PYEND
 		endif
 	endfunction
@@ -68,9 +72,11 @@ if !exists("*s:SpecChangelog")
 		let name = ""
 		let b:ver = ""
 		let b:rel = ""
+		let b:epoch = ""
 		let nameline = -1
 		let verline = -1
 		let relline = -1
+		let epochline = -1
 		let chgline = -1
 		while (line <= line("$"))
 			let linestr = getline(line)
@@ -83,6 +89,9 @@ if !exists("*s:SpecChangelog")
 			elseif (b:rel == "" && linestr =~? '^Release:')
 				let relline = line
 				let b:rel = substitute(strpart(linestr,8), '^[	 ]*\([^ 	]\+\)[		]*$','\1','')
+			elseif (b:epoch == "" && linestr =~? '^Epoch:')
+				let epochline = line
+				let b:epoch = substitute(strpart(linestr,6), '^[	 ]*\([^ 	]\+\)[		]*$','\1','')
 			elseif (linestr =~? '^%changelog')
 				let chgline = line
 				execute line
@@ -95,6 +104,7 @@ if !exists("*s:SpecChangelog")
 			let name = s:ParseRpmVars(name, nameline)
 			let b:ver = s:ParseRpmVars(b:ver, verline)
 			let b:rel = s:ParseRpmVars(b:rel, relline)
+			let b:epoch = s:ParseRpmVars(b:epoch, epochline)
 		else
 			let include_release_info = 0
 		endif
@@ -117,9 +127,13 @@ if !exists("*s:SpecChangelog")
 		if (chgline != -1)
 			let tmptime = v:lc_time
 			language time C
-			let parsed_format = "* ".strftime(format)." - ".b:ver."-".b:rel
+			let evr = b:ver."-".b:rel
+			if b:epoch != ""
+				let evr = b:epoch.":".evr
+			endif
+			let parsed_format = "* ".strftime(format)." - ".evr
 			execute "language time" tmptime
-			let release_info = "+ ".name."-".b:ver."-".b:rel
+			let release_info = "+ ".name."-".evr
 			let wrong_format = 0
 			let wrong_release = 0
 			let insert_line = 0
@@ -136,7 +150,7 @@ if !exists("*s:SpecChangelog")
 						execute relline
 						normal 
 						let b:rel = substitute(strpart(getline(relline),8), '^[	 ]*\([^ 	]\+\)[		]*$','\1','')
-						let release_info = "+ ".name."-".b:ver."-".b:rel
+						let release_info = "+ ".name."-".evr
 					endif
 				endif
 				let n = 0
